@@ -902,139 +902,447 @@ function PhotoField({ field, photos = [], onAdd, onRemove, onView }) {
   );
 }
 
-// ─── Report view ───
+// ─── Educational context blurbs keyed by field id + value ───
+const EDU = {
+  // Shingle issues
+  "Curling": "Curling shingles indicate aging or improper ventilation. When shingles curl, they lose their ability to shed water effectively and become vulnerable to wind uplift, which can lead to leaks and further damage.",
+  "Cracking": "Cracked shingles are caused by thermal cycling and aging. Cracks allow water infiltration into the underlayment and decking, which can cause rot, mold, and interior water damage over time.",
+  "Blistering": "Blistering occurs when moisture trapped in the shingle expands from heat. While minor blistering may be cosmetic, severe blistering weakens the shingle surface and accelerates granule loss.",
+  "Granule Loss": "Granules protect shingles from UV radiation and impact. Significant granule loss leaves the asphalt layer exposed, dramatically shortening remaining roof life and reducing weather protection.",
+  "Missing Shingles": "Missing shingles leave the underlayment or decking directly exposed to weather. This is an immediate vulnerability that should be addressed promptly to prevent water intrusion.",
+  "Lifted/Loose Tabs": "Lifted or loose shingle tabs are highly susceptible to wind damage. Even moderate winds can catch a lifted tab and tear it away, creating an entry point for water.",
+  "Algae/Moss Growth": "Algae and moss retain moisture against the roof surface, which can deteriorate shingles over time. Moss roots can also lift shingle edges, creating gaps that allow water penetration.",
+  "Wind Damage (creasing)": "Wind creasing occurs when high winds lift a shingle tab and fold it back, breaking the seal strip. Creased shingles have compromised wind resistance and water-shedding ability.",
+  "Hail Damage (bruising/impact marks)": "Hail impacts fracture the shingle mat and dislodge granules, even when damage is not immediately visible. This compromises the shingle's waterproofing and significantly reduces its remaining service life. Hail damage is typically covered under homeowner's insurance policies.",
+  "Improper Nailing": "Incorrect nail placement (high nailing, exposed nails, or insufficient nails) weakens shingle attachment and voids manufacturer warranties. This is a workmanship defect from the original installation.",
+  "Exposed Nail Heads": "Exposed nail heads are direct paths for water to reach the decking. Each exposed nail is a potential leak point that should be sealed or corrected.",
+  "Thermal Splitting": "Thermal splitting occurs when repeated expansion and contraction cycles cause shingles to crack along stress points. This is a sign of advanced aging and usually indicates the roof is nearing end of life.",
+
+  // Flashing issues
+  "Rusted Step Flashing": "Step flashing redirects water away from walls and dormers. When it rusts through, water can travel behind the siding and into the wall cavity, causing hidden structural damage.",
+  "Lifted/Separated Flashing": "Flashing that has lifted or separated from the roof surface creates a direct path for water intrusion. This is especially critical around chimneys, walls, and roof-to-wall transitions.",
+  "Missing Kick-Out Flashing": "Kick-out flashing diverts water away from where a roof edge meets a sidewall. Without it, water concentrates at that junction and runs behind siding, causing rot and mold in the wall framing.",
+  "Damaged Counter Flashing": "Counter flashing covers the top edge of step flashing where it meets a vertical surface. When damaged, it allows water to get behind the step flashing, defeating its purpose entirely.",
+  "Improper Valley Flashing": "Valleys concentrate large volumes of water. Improperly installed valley flashing can cause water to back up under shingles, leading to leaks that are often difficult to locate from inside the home.",
+  "Chimney Flashing Failure": "Chimney flashing is one of the most common sources of roof leaks. Failure at this junction allows water into the attic and interior walls, and can cause significant damage before it becomes visible inside.",
+  "Wall-to-Roof Flashing Issue": "Wall-to-roof transitions require proper step flashing and sealant. Failures at these junctions allow water behind the siding, which can cause hidden rot and mold growth in the wall structure.",
+  "Skylight Flashing Failure": "Skylight flashing failure is a frequent cause of persistent leaks. Water can travel along the skylight frame and drip far from the actual entry point, making these leaks difficult to diagnose.",
+  "Caulk/Sealant Deterioration": "Sealant is a temporary solution that breaks down with UV exposure and temperature changes. Deteriorated sealant around penetrations and flashing should be replaced to prevent water intrusion.",
+
+  // Pipe boot issues
+  "Cracked Neoprene": "The neoprene collar around pipe boots dries out and cracks over time due to UV exposure. A cracked boot is an active leak point that allows water to run directly down the pipe and into the home.",
+  "Split Collar": "A split pipe boot collar can no longer seal against the pipe, allowing water entry with every rain event. This is one of the most common and easily overlooked sources of roof leaks.",
+  "Corroded Base": "Corrosion at the pipe boot base weakens the seal to the roof surface. Advanced corrosion can create gaps large enough for significant water intrusion.",
+  "Missing Boot": "A missing pipe boot leaves an open penetration in the roof. This is an immediate and serious leak hazard that requires prompt attention.",
+  "Improper Seal": "An improperly sealed pipe boot may appear intact but fails to prevent water entry, especially during wind-driven rain. Proper installation requires both mechanical fastening and sealant.",
+
+  // Ventilation issues
+  "Blocked Soffit Vents": "Soffit vents provide critical intake air for the attic ventilation system. When blocked (often by insulation), the attic cannot properly regulate heat and moisture, leading to ice dams in winter and excessive heat in summer that deteriorates shingles from below.",
+  "Missing Ridge Vent End Caps": "Open ridge vent ends allow wind-driven rain, insects, and debris to enter the attic space. End caps are essential to maintain the ridge vent's function while keeping weather out.",
+  "Mixed Vent Types (short-circuiting)": "Mixing exhaust vent types (for example, ridge vents with box vents or turbines) can cause short-circuiting, where air enters through one exhaust vent and exits another instead of drawing air through the soffit intake. This defeats the ventilation system's purpose.",
+  "Inadequate Intake": "Insufficient soffit or intake ventilation restricts airflow, causing heat and moisture to build up in the attic. This accelerates shingle deterioration and can cause condensation, mold, and ice dams.",
+  "Inadequate Exhaust": "Without adequate exhaust ventilation, hot air and moisture become trapped in the attic. This can raise cooling costs, promote mold growth, and shorten roof life.",
+  "Attic Condensation Signs": "Condensation in the attic indicates a ventilation or insulation problem. Persistent moisture leads to mold growth, wood rot, and can compromise the structural integrity of the roof decking.",
+
+  // Gutter issues
+  "Sagging/Pulling Away": "Gutters pulling away from the fascia indicate failed fasteners or rotted wood behind the gutter. Sagging gutters cannot properly direct water to downspouts, leading to overflow and foundation damage.",
+  "Clogged/Debris Buildup": "Clogged gutters cause water to back up and overflow, which can damage fascia boards, soffit, siding, and the foundation. Standing water in gutters also accelerates corrosion and adds excessive weight.",
+  "Leaking Seams": "Leaking gutter seams allow water to drip behind the gutter and onto the fascia, causing wood rot over time. Seamless gutters eliminate this common failure point.",
+  "Missing Sections": "Missing gutter sections leave portions of the roofline without water management. The concentrated runoff from these gaps erodes landscaping and can direct water toward the foundation.",
+  "Improper Pitch": "Gutters must slope toward downspouts at a minimum of 1/4 inch per 10 feet. Improper pitch causes standing water, which accelerates corrosion, attracts mosquitoes, and adds unnecessary weight.",
+  "Overflow Damage": "Evidence of gutter overflow (staining on fascia or siding below gutters) indicates undersized gutters, clogs, or insufficient downspouts for the roof area draining to that section.",
+  "Missing Downspout Extensions": "Downspouts without extensions discharge water directly at the foundation. Extensions should carry water at least 4-6 feet away from the house to prevent basement leaks and foundation settling.",
+  "Damaged Downspouts": "Damaged downspouts cannot properly carry water away from the structure. Crushed or disconnected sections cause water to pool near the foundation.",
+  "Fascia Damage Behind Gutters": "Rotted or damaged fascia behind the gutters compromises gutter attachment and indicates long-term water exposure. This typically requires fascia replacement before new gutters can be installed.",
+
+  // Fascia issues
+  "Wood Rot": "Rotted fascia boards cannot support gutters and allow water and pests into the roof structure. Rot spreads to adjacent boards if not addressed, and typically indicates a long-standing moisture issue.",
+  "Peeling Paint": "Peeling paint on fascia exposes bare wood to moisture, accelerating deterioration. This is often an early warning sign that should be addressed before rot develops.",
+  "Warping/Buckling": "Warped fascia indicates moisture damage and can create gaps where water and pests enter. Buckling boards may also affect gutter alignment and drainage.",
+  "Pest Damage": "Pest damage (from carpenter bees, woodpeckers, squirrels, etc.) creates entry points into the roof structure. Damaged sections should be replaced and the pest issue addressed to prevent recurrence.",
+
+  // Soffit issues
+  "Holes/Gaps": "Holes in the soffit allow pests, birds, and moisture into the attic. Even small gaps can become entry points for squirrels, raccoons, and insects that cause further damage.",
+  "Pest Entry Points": "Evidence of pest entry through the soffit means animals or insects have access to the attic space. This can lead to contaminated insulation, chewed wiring, and structural damage.",
+  "Water Damage": "Water-damaged soffit panels indicate an issue above, often failed flashing, ice dams, or gutter overflow. The water source should be identified and corrected along with the soffit repair.",
+  "Sagging Panels": "Sagging soffit panels suggest water damage or failed fasteners. Sagging creates gaps that compromise attic ventilation and allow pest entry.",
+
+  // Interior issues
+  "Active Leak(s)": "An active leak requires immediate attention to prevent structural damage, mold growth, and damage to personal property. The roof penetration point should be identified and repaired as soon as possible.",
+  "Water Staining on Ceiling": "Ceiling stains indicate past or current water intrusion from the roof. Even if the stain appears dry, the underlying cause should be investigated, as intermittent leaks can cause hidden mold growth.",
+  "Water Staining on Walls": "Wall stains near the roofline often indicate flashing failure or ice dam damage. Water can travel along framing members and appear far from the actual point of entry.",
+  "Mold/Mildew Present": "Mold in the attic or on interior surfaces near the roof indicates persistent moisture. This is both a structural concern and a health hazard that should be professionally remediated.",
+  "Daylight Visible Through Decking": "Visible daylight through the roof decking means there are gaps in the roof surface. These gaps allow water, air, and pests to enter and indicate either damage or deteriorated materials.",
+  "Sagging Decking": "Sagging roof decking indicates prolonged moisture exposure or structural overload. Affected decking must be replaced during any roof replacement to ensure a solid foundation for the new materials.",
+  "Inadequate Insulation": "Insufficient attic insulation leads to higher energy costs, ice dam formation in winter, and excessive heat transfer that accelerates shingle aging from below.",
+  "Condensation/Moisture Buildup": "Attic moisture buildup is typically caused by inadequate ventilation, air leaks from the living space, or insufficient insulation. Left unaddressed, it leads to mold, rot, and structural damage.",
+
+  // Ventilation types
+  "Ridge Vent": "Ridge vents run along the roof peak and provide continuous exhaust ventilation. They are considered the most effective exhaust system when paired with adequate soffit intake.",
+  "Box Vent": "Box vents (also called static vents or louvers) provide exhaust ventilation through individual units installed near the ridge. They work best when ridge vents are not feasible.",
+  "Turbine Vent": "Turbine vents use wind power to actively draw hot air from the attic. They are effective but can introduce rain if the bearings fail and the turbine stops spinning.",
+
+  // Recommendation context
+  "Full Roof Replacement": "Based on the findings, a full roof replacement is recommended. This involves removing all existing roofing materials down to the decking, inspecting and repairing the decking as needed, and installing new underlayment, flashing, and shingles to manufacturer specifications.",
+  "Insurance Claim Recommended": "The damage documented in this report may be covered under your homeowner's insurance policy. We recommend filing a claim and can assist you through the process, including being present for the adjuster's inspection to ensure all damage is properly documented.",
+  "Major Repairs Needed": "Several significant issues were identified that require professional repair. Addressing these promptly will help prevent further deterioration and protect your home from water damage.",
+  "Minor Repairs Only": "The roof is in generally acceptable condition with some minor issues that should be addressed to maintain its integrity and maximize its remaining service life.",
+  "Partial Roof Replacement": "Portions of the roof have deteriorated to the point where targeted replacement is warranted. This approach addresses the most damaged sections while preserving areas that still have remaining service life.",
+};
+
+// ─── Print-ready Report View ───
 function ReportView({ data, photos, onBack }) {
-  const allSections = SECTIONS;
-  const [lightbox, setLightbox] = useState(null); // { images: [], index: 0 }
+  const [lightbox, setLightbox] = useState(null);
+
+  // Collect all educational blurbs that apply to this report
+  const getBlurbs = () => {
+    const found = [];
+    const seen = new Set();
+    SECTIONS.forEach((sec) => {
+      sec.fields.forEach((f) => {
+        const val = data[f.id];
+        if (!val) return;
+        if (f.type === "multicheck" && Array.isArray(val)) {
+          val.forEach((v) => {
+            if (EDU[v] && !seen.has(v)) {
+              seen.add(v);
+              found.push({ term: v, text: EDU[v], section: sec.title });
+            }
+          });
+        } else if (f.type === "select" || f.type === "rating") {
+          if (EDU[val] && !seen.has(val)) {
+            seen.add(val);
+            found.push({ term: val, text: EDU[val], section: sec.title });
+          }
+        }
+      });
+    });
+    return found;
+  };
+
+  const blurbs = getBlurbs();
+
+  const r = {
+    page: {
+      width: "8.5in",
+      minHeight: "11in",
+      margin: "0 auto",
+      background: "#FFFFFF",
+      color: "#1a1a1a",
+      fontFamily: "'DM Sans', 'Segoe UI', system-ui, sans-serif",
+      fontSize: 11,
+      lineHeight: 1.5,
+      padding: "0.6in 0.75in",
+      boxSizing: "border-box",
+    },
+    headerBar: {
+      display: "flex",
+      justifyContent: "space-between",
+      alignItems: "center",
+      borderBottom: "3px solid #2C3E2D",
+      paddingBottom: 14,
+      marginBottom: 20,
+    },
+    logoBlock: {
+      display: "flex",
+      alignItems: "center",
+      gap: 12,
+    },
+    logoBox: {
+      width: 40,
+      height: 40,
+      background: "#2C3E2D",
+      borderRadius: 8,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      color: "#D4A44C",
+      fontWeight: 800,
+      fontSize: 20,
+    },
+    companyName: {
+      fontSize: 22,
+      fontWeight: 800,
+      color: "#2C3E2D",
+      letterSpacing: "-0.02em",
+    },
+    companyInfo: {
+      textAlign: "right",
+      fontSize: 9,
+      color: "#666",
+      lineHeight: 1.6,
+    },
+    reportTitle: {
+      fontSize: 18,
+      fontWeight: 700,
+      color: "#2C3E2D",
+      textAlign: "center",
+      margin: "4px 0 20px",
+      textTransform: "uppercase",
+      letterSpacing: "0.08em",
+    },
+    propGrid: {
+      display: "grid",
+      gridTemplateColumns: "1fr 1fr",
+      gap: "4px 32px",
+      marginBottom: 24,
+      padding: "12px 16px",
+      background: "#F7F6F3",
+      borderRadius: 6,
+    },
+    propLabel: {
+      fontSize: 8,
+      fontWeight: 700,
+      color: "#888",
+      textTransform: "uppercase",
+      letterSpacing: "0.08em",
+      marginTop: 6,
+    },
+    propValue: {
+      fontSize: 11,
+      color: "#1a1a1a",
+      fontWeight: 500,
+      marginBottom: 2,
+    },
+    sectionHead: {
+      fontSize: 13,
+      fontWeight: 800,
+      color: "#2C3E2D",
+      textTransform: "uppercase",
+      letterSpacing: "0.06em",
+      borderBottom: "2px solid #D4A44C",
+      paddingBottom: 4,
+      marginTop: 24,
+      marginBottom: 10,
+    },
+    fieldRow: {
+      display: "flex",
+      justifyContent: "space-between",
+      padding: "3px 0",
+      borderBottom: "1px solid #EDEDEB",
+    },
+    fieldLabel: {
+      fontSize: 10,
+      color: "#666",
+      fontWeight: 600,
+    },
+    fieldValue: {
+      fontSize: 11,
+      color: "#1a1a1a",
+      fontWeight: 600,
+      textAlign: "right",
+      maxWidth: "60%",
+    },
+    ratingBadge: (level) => {
+      const colors = { 1: "#C0392B", 2: "#E67E22", 3: "#D4A44C", 4: "#2980B9", 5: "#27AE60" };
+      const c = colors[level] || "#666";
+      return {
+        display: "inline-block",
+        padding: "1px 8px",
+        borderRadius: 4,
+        background: c,
+        color: "#fff",
+        fontSize: 10,
+        fontWeight: 700,
+      };
+    },
+    photoGrid: {
+      display: "flex",
+      flexWrap: "wrap",
+      gap: 8,
+      marginTop: 8,
+      marginBottom: 8,
+    },
+    photo: {
+      width: 160,
+      height: 120,
+      objectFit: "cover",
+      borderRadius: 4,
+      border: "1px solid #ddd",
+      cursor: "pointer",
+    },
+    eduSection: {
+      marginTop: 28,
+      pageBreakBefore: "auto",
+    },
+    eduCard: {
+      padding: "8px 12px",
+      marginBottom: 8,
+      background: "#F7F6F3",
+      borderLeft: "3px solid #D4A44C",
+      borderRadius: "0 4px 4px 0",
+    },
+    eduTerm: {
+      fontSize: 11,
+      fontWeight: 700,
+      color: "#2C3E2D",
+    },
+    eduText: {
+      fontSize: 10,
+      color: "#444",
+      lineHeight: 1.5,
+      marginTop: 2,
+    },
+    footer: {
+      marginTop: 32,
+      paddingTop: 12,
+      borderTop: "2px solid #2C3E2D",
+      display: "flex",
+      justifyContent: "space-between",
+      fontSize: 9,
+      color: "#888",
+    },
+    noprint: {
+      display: "flex",
+      gap: 10,
+      justifyContent: "center",
+      padding: "20px 0 40px",
+      background: palette.bg,
+    },
+  };
 
   return (
-    <div style={s.reportContainer}>
-      {/* Lightbox overlay */}
+    <div>
+      {/* Lightbox */}
       {lightbox && (
-        <div
-          onClick={() => setLightbox(null)}
-          style={{
-            position: "fixed",
-            inset: 0,
-            background: "rgba(0,0,0,0.92)",
-            zIndex: 9999,
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: 16,
-          }}
-        >
-          <img
-            src={lightbox.images[lightbox.index]}
-            alt=""
-            onClick={(e) => e.stopPropagation()}
-            style={{
-              maxWidth: "100%",
-              maxHeight: "80vh",
-              objectFit: "contain",
-              borderRadius: 8,
-            }}
-          />
+        <div onClick={() => setLightbox(null)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.92)", zIndex: 9999, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 16 }}>
+          <img src={lightbox.images[lightbox.index]} alt="" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "90%", maxHeight: "80vh", objectFit: "contain", borderRadius: 8 }} />
           {lightbox.images.length > 1 && (
             <div style={{ display: "flex", gap: 16, marginTop: 16 }} onClick={(e) => e.stopPropagation()}>
-              <button
-                type="button"
-                onClick={() => setLightbox((p) => ({ ...p, index: (p.index - 1 + p.images.length) % p.images.length }))}
-                style={{ background: "rgba(255,255,255,0.15)", border: "none", color: "#fff", fontSize: 20, width: 44, height: 44, borderRadius: "50%", cursor: "pointer" }}
-              >
-                ‹
-              </button>
-              <span style={{ color: palette.textDim, fontSize: 14, alignSelf: "center" }}>
-                {lightbox.index + 1} / {lightbox.images.length}
-              </span>
-              <button
-                type="button"
-                onClick={() => setLightbox((p) => ({ ...p, index: (p.index + 1) % p.images.length }))}
-                style={{ background: "rgba(255,255,255,0.15)", border: "none", color: "#fff", fontSize: 20, width: 44, height: 44, borderRadius: "50%", cursor: "pointer" }}
-              >
-                ›
-              </button>
+              <button type="button" onClick={() => setLightbox((p) => ({ ...p, index: (p.index - 1 + p.images.length) % p.images.length }))} style={{ background: "rgba(255,255,255,0.15)", border: "none", color: "#fff", fontSize: 20, width: 44, height: 44, borderRadius: "50%", cursor: "pointer" }}>‹</button>
+              <span style={{ color: "#aaa", fontSize: 14, alignSelf: "center" }}>{lightbox.index + 1} / {lightbox.images.length}</span>
+              <button type="button" onClick={() => setLightbox((p) => ({ ...p, index: (p.index + 1) % p.images.length }))} style={{ background: "rgba(255,255,255,0.15)", border: "none", color: "#fff", fontSize: 20, width: 44, height: 44, borderRadius: "50%", cursor: "pointer" }}>›</button>
             </div>
           )}
-          <button
-            type="button"
-            onClick={() => setLightbox(null)}
-            style={{ position: "absolute", top: 16, right: 16, background: "rgba(255,255,255,0.15)", border: "none", color: "#fff", fontSize: 22, width: 40, height: 40, borderRadius: "50%", cursor: "pointer" }}
-          >
-            ✕
-          </button>
+          <button type="button" onClick={() => setLightbox(null)} style={{ position: "absolute", top: 16, right: 16, background: "rgba(255,255,255,0.15)", border: "none", color: "#fff", fontSize: 22, width: 40, height: 40, borderRadius: "50%", cursor: "pointer" }}>✕</button>
         </div>
       )}
 
-      <div style={{ textAlign: "center", marginBottom: 24 }}>
-        <div style={{ ...s.logoMark, width: 48, height: 48, fontSize: 22, margin: "0 auto 8px", borderRadius: 12 }}>D</div>
-        <div style={{ fontSize: 20, fontWeight: 700 }}>Dogwood Exteriors</div>
-        <div style={{ fontSize: 13, color: palette.textDim, marginTop: 2 }}>Roof Inspection Report</div>
-        <div style={{ fontSize: 12, color: palette.textDim, marginTop: 2 }}>
-          {data.inspection_date || "N/A"} &middot; {data.inspector || ""}
+      {/* Print styles */}
+      <style>{`
+        @media print {
+          body { background: #fff !important; margin: 0; }
+          .noprint { display: none !important; }
+          .report-page { box-shadow: none !important; }
+        }
+        @media screen {
+          .report-page { box-shadow: 0 2px 20px rgba(0,0,0,0.15); }
+        }
+      `}</style>
+
+      {/* Action buttons - hidden when printing */}
+      <div className="noprint" style={r.noprint}>
+        <button type="button" style={s.btnSecondary} onClick={onBack}>← Edit</button>
+        <button type="button" style={s.btnPrimary} onClick={() => window.print()}>Print / Save PDF</button>
+      </div>
+
+      {/* ═══════ REPORT PAGE ═══════ */}
+      <div className="report-page" style={r.page}>
+        {/* Header */}
+        <div style={r.headerBar}>
+          <div style={r.logoBlock}>
+            <div style={r.logoBox}>D</div>
+            <div style={r.companyName}>Dogwood Exteriors</div>
+          </div>
+          <div style={r.companyInfo}>
+            Arnold, MD &middot; MHIC #157873<br />
+            dogwoodgc.com<br />
+          </div>
+        </div>
+
+        <div style={r.reportTitle}>Roof Inspection Report</div>
+
+        {/* Property info grid */}
+        <div style={r.propGrid}>
+          {[
+            ["Homeowner", data.homeowner_name],
+            ["Inspector", data.inspector],
+            ["Address", [data.address, data.city, data.state, data.zip].filter(Boolean).join(", ")],
+            ["Inspection Date", data.inspection_date],
+            ["Phone", data.phone],
+            ["Email", data.email],
+          ].filter(([, v]) => v).map(([label, val]) => (
+            <div key={label}>
+              <div style={r.propLabel}>{label}</div>
+              <div style={r.propValue}>{val}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Data sections (skip property, already rendered above) */}
+        {SECTIONS.filter((sec) => sec.id !== "property").map((section) => {
+          const sectionFields = section.fields.filter((f) => {
+            if (f.type === "photo") return (photos[f.id] || []).length > 0;
+            const v = data[f.id];
+            return v && (Array.isArray(v) ? v.length > 0 : true);
+          });
+          if (sectionFields.length === 0) return null;
+
+          return (
+            <div key={section.id}>
+              <div style={r.sectionHead}>{section.icon} {section.title}</div>
+              {sectionFields.map((f) => {
+                if (f.type === "photo") {
+                  const p = photos[f.id] || [];
+                  return (
+                    <div key={f.id}>
+                      <div style={{ ...r.fieldLabel, marginTop: 6, marginBottom: 2 }}>{f.label}</div>
+                      <div style={r.photoGrid}>
+                        {p.map((src, i) => (
+                          <img key={i} src={src} style={r.photo} alt="" onClick={() => setLightbox({ images: p, index: i })} />
+                        ))}
+                      </div>
+                    </div>
+                  );
+                }
+
+                const val = data[f.id];
+                const isRating = f.type === "rating";
+                const ratingNum = isRating ? parseInt(val) : null;
+                const displayVal = Array.isArray(val) ? val.join(", ") : val;
+
+                return (
+                  <div key={f.id} style={r.fieldRow}>
+                    <span style={r.fieldLabel}>{f.label}</span>
+                    {isRating ? (
+                      <span style={r.ratingBadge(ratingNum)}>{displayVal}</span>
+                    ) : (
+                      <span style={r.fieldValue}>{displayVal}</span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          );
+        })}
+
+        {/* Educational findings section */}
+        {blurbs.length > 0 && (
+          <div style={r.eduSection}>
+            <div style={r.sectionHead}>📖 Understanding Your Inspection Findings</div>
+            <div style={{ fontSize: 10, color: "#666", marginBottom: 12, lineHeight: 1.5 }}>
+              The following explanations are provided to help you understand the significance of each issue identified during your inspection.
+            </div>
+            {blurbs.map((b, i) => (
+              <div key={i} style={r.eduCard}>
+                <div style={r.eduTerm}>{b.term}</div>
+                <div style={r.eduText}>{b.text}</div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Footer */}
+        <div style={r.footer}>
+          <span>Dogwood Exteriors &middot; MHIC #157873 &middot; dogwoodgc.com</span>
+          <span>Report generated {data.inspection_date || new Date().toISOString().split("T")[0]}</span>
         </div>
       </div>
 
-      {allSections.map((section) => {
-        const sectionHasData = section.fields.some((f) => {
-          if (f.type === "photo") return (photos[f.id] || []).length > 0;
-          const v = data[f.id];
-          return v && (Array.isArray(v) ? v.length > 0 : true);
-        });
-        if (!sectionHasData) return null;
-        return (
-          <div key={section.id} style={s.reportCard}>
-            <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 12, color: palette.accent }}>
-              {section.icon} {section.title}
-            </div>
-            {section.fields.map((f) => {
-              if (f.type === "photo") {
-                const p = photos[f.id] || [];
-                if (p.length === 0) return null;
-                return (
-                  <div key={f.id} style={{ marginBottom: 10 }}>
-                    <div style={s.reportLabel}>{f.label}</div>
-                    <div style={s.reportPhotoGrid}>
-                      {p.map((src, i) => (
-                        <img
-                          key={i}
-                          src={src}
-                          style={{ ...s.reportPhoto, cursor: "pointer" }}
-                          alt=""
-                          onClick={() => setLightbox({ images: p, index: i })}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                );
-              }
-              const val = data[f.id];
-              if (!val || (Array.isArray(val) && val.length === 0)) return null;
-              const isRating = f.type === "rating" && val;
-              const ratingNum = isRating ? parseInt(val) : null;
-              return (
-                <div key={f.id} style={{ marginBottom: 10 }}>
-                  <div style={s.reportLabel}>{f.label}</div>
-                  {isRating ? (
-                    <span style={s.badge(ratingNum)}>{val}</span>
-                  ) : (
-                    <div style={s.reportValue}>{Array.isArray(val) ? val.join(", ") : val}</div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        );
-      })}
-
-      <div style={{ display: "flex", gap: 10, marginTop: 20, marginBottom: 40 }}>
-        <button type="button" style={s.btnSecondary} onClick={onBack}>
-          ← Edit
-        </button>
-        <button type="button" style={s.btnPrimary} onClick={() => window.print()}>
-          Print / Save PDF
-        </button>
+      {/* Bottom action buttons */}
+      <div className="noprint" style={r.noprint}>
+        <button type="button" style={s.btnSecondary} onClick={onBack}>← Edit</button>
+        <button type="button" style={s.btnPrimary} onClick={() => window.print()}>Print / Save PDF</button>
       </div>
     </div>
   );
