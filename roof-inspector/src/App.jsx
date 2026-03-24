@@ -1013,6 +1013,16 @@ const EDU = {
 function ReportView({ data, photos, onBack }) {
   const [lightbox, setLightbox] = useState(null);
 
+  // Set document title for PDF filename: "Roof Inspection - LastName"
+  useEffect(() => {
+    const name = (data.homeowner_name || "").trim();
+    const parts = name.split(/\s+/);
+    const lastName = parts.length > 1 ? parts[parts.length - 1] : (name || "Report");
+    const dateStr = data.inspection_date || new Date().toISOString().split("T")[0];
+    document.title = `Roof Inspection - ${lastName} - ${dateStr}`;
+    return () => { document.title = "Dogwood Exteriors - Roof Inspection"; };
+  }, [data.homeowner_name, data.inspection_date]);
+
   // Collect all educational blurbs that apply to this report
   const getBlurbs = () => {
     const found = [];
@@ -1051,7 +1061,7 @@ function ReportView({ data, photos, onBack }) {
       fontFamily: "'DM Sans', 'Segoe UI', system-ui, sans-serif",
       fontSize: 11,
       lineHeight: 1.5,
-      padding: "0.6in 0.75in",
+      padding: "0.4in 0.5in",
       boxSizing: "border-box",
     },
     headerBar: {
@@ -1241,7 +1251,7 @@ function ReportView({ data, photos, onBack }) {
       <style>{`
         @page {
           size: letter;
-          margin: 0;
+          margin: 0.4in 0.5in;
         }
         @media print {
           html, body {
@@ -1255,7 +1265,9 @@ function ReportView({ data, photos, onBack }) {
           .report-page {
             box-shadow: none !important;
             width: 100% !important;
+            max-width: 100% !important;
             margin: 0 !important;
+            padding: 0 !important;
           }
         }
         @media screen {
@@ -1368,7 +1380,7 @@ function ReportView({ data, photos, onBack }) {
         {/* Footer */}
         <div style={r.footer}>
           <span>Dogwood Exteriors &middot; MHIC #157873 &middot; dogwoodgc.com</span>
-          <span>Report generated {data.inspection_date || new Date().toISOString().split("T")[0]}</span>
+          <span style={{ alignSelf: "center" }}>Report generated {data.inspection_date || new Date().toISOString().split("T")[0]}</span>
         </div>
       </div>
 
