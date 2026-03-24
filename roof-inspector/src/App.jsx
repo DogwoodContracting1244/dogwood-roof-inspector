@@ -891,7 +891,26 @@ function PhotoField({ field, photos = [], onAdd, onRemove, onView }) {
             const files = Array.from(e.target.files || []);
             files.forEach((file) => {
               const reader = new FileReader();
-              reader.onload = (ev) => onAdd(field.id, ev.target.result);
+              reader.onload = (ev) => {
+                const img = new Image();
+                img.onload = () => {
+                  const MAX = 1200;
+                  let w = img.width;
+                  let h = img.height;
+                  if (w > MAX || h > MAX) {
+                    if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
+                    else { w = Math.round(w * MAX / h); h = MAX; }
+                  }
+                  const canvas = document.createElement("canvas");
+                  canvas.width = w;
+                  canvas.height = h;
+                  const ctx = canvas.getContext("2d");
+                  ctx.drawImage(img, 0, 0, w, h);
+                  const compressed = canvas.toDataURL("image/jpeg", 0.6);
+                  onAdd(field.id, compressed);
+                };
+                img.src = ev.target.result;
+              };
               reader.readAsDataURL(file);
             });
             e.target.value = "";
@@ -1220,10 +1239,24 @@ function ReportView({ data, photos, onBack }) {
 
       {/* Print styles */}
       <style>{`
+        @page {
+          size: letter;
+          margin: 0;
+        }
         @media print {
-          body { background: #fff !important; margin: 0; }
+          html, body {
+            margin: 0 !important;
+            padding: 0 !important;
+            background: #fff !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
           .noprint { display: none !important; }
-          .report-page { box-shadow: none !important; }
+          .report-page {
+            box-shadow: none !important;
+            width: 100% !important;
+            margin: 0 !important;
+          }
         }
         @media screen {
           .report-page { box-shadow: 0 2px 20px rgba(0,0,0,0.15); }
@@ -1349,21 +1382,24 @@ function ReportView({ data, photos, onBack }) {
 }
 
 // ─── Main App ───
+const getDefaults = () => {
+  const defaults = {};
+  SECTIONS.forEach((sec) =>
+    sec.fields.forEach((f) => {
+      if (f.defaultValue) defaults[f.id] = f.defaultValue;
+    })
+  );
+  return defaults;
+};
+
 export default function RoofInspectionApp() {
   const [currentSection, setCurrentSection] = useState(0);
-  const [data, setData] = useState(() => {
-    const defaults = {};
-    SECTIONS.forEach((sec) =>
-      sec.fields.forEach((f) => {
-        if (f.defaultValue) defaults[f.id] = f.defaultValue;
-      })
-    );
-    return defaults;
-  });
+  const [data, setData] = useState(getDefaults);
   const [photos, setPhotos] = useState({});
   const [showReport, setShowReport] = useState(false);
   const [showJump, setShowJump] = useState(false);
   const [lightbox, setLightbox] = useState(null);
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
 
   const handleChange = useCallback((id, val) => {
     setData((prev) => ({ ...prev, [id]: val }));
@@ -1376,6 +1412,13 @@ export default function RoofInspectionApp() {
   const handlePhotoRemove = useCallback((id, index) => {
     setPhotos((prev) => ({ ...prev, [id]: (prev[id] || []).filter((_, i) => i !== index) }));
   }, []);
+
+  const handleClearAll = () => {
+    setData(getDefaults());
+    setPhotos({});
+    setCurrentSection(0);
+    setShowClearConfirm(false);
+  };
 
   const section = SECTIONS[currentSection];
   const totalPhotos = Object.values(photos).reduce((a, b) => a + b.length, 0);
@@ -1394,6 +1437,68 @@ export default function RoofInspectionApp() {
 
   return (
     <div style={s.app}>
+      {/* Clear All confirmation modal */}
+      {showClearConfirm && (
+        <div
+          onClick={() => setShowClearConfirm(false)}
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0,0,0,0.8)",
+            zIndex: 9999,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: 24,
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: palette.surface,
+              border: `1px solid ${palette.border}`,
+              borderRadius: 14,
+              padding: 24,
+              maxWidth: 320,
+              width: "100%",
+              textAlign: "center",
+            }}
+          >
+            <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 8, color: palette.text }}>Clear All Fields?</div>
+            <div style={{ fontSize: 13, color: palette.textDim, marginBottom: 20, lineHeight: 1.5 }}>
+              This will erase all data and photos from the current inspection. This cannot be undone.
+            </div>
+            <div style={{ display: "flex", gap: 10 }}>
+              <button
+                type="button"
+                onClick={() => setShowClearConfirm(false)}
+                style={{ ...s.btnSecondary, flex: 1, padding: "12px 0" }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleClearAll}
+                style={{
+                  flex: 1,
+                  padding: "12px 0",
+                  borderRadius: 10,
+                  border: "none",
+                  background: palette.red,
+                  color: "#fff",
+                  fontSize: 15,
+                  fontWeight: 700,
+                  cursor: "pointer",
+                  fontFamily: "inherit",
+                }}
+              >
+                Clear All
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Lightbox overlay */}
       {lightbox && (
         <div
@@ -1461,11 +1566,30 @@ export default function RoofInspectionApp() {
             <div key={i} style={s.progressDot(i === currentSection, i < currentSection)} />
           ))}
         </div>
-        <div style={{ display: "flex", justifyContent: "space-between", marginTop: 6 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 6 }}>
           <span style={{ fontSize: 11, color: palette.textDim }}>
             Section {currentSection + 1} of {SECTIONS.length}
           </span>
-          <span style={{ fontSize: 11, color: palette.textDim }}>📷 {totalPhotos} photo{totalPhotos !== 1 ? "s" : ""}</span>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <span style={{ fontSize: 11, color: palette.textDim }}>📷 {totalPhotos} photo{totalPhotos !== 1 ? "s" : ""}</span>
+            <button
+              type="button"
+              onClick={() => setShowClearConfirm(true)}
+              style={{
+                background: "transparent",
+                border: `1px solid ${palette.border}`,
+                borderRadius: 6,
+                color: palette.red,
+                fontSize: 10,
+                fontWeight: 600,
+                padding: "3px 8px",
+                cursor: "pointer",
+                fontFamily: "inherit",
+              }}
+            >
+              Clear All
+            </button>
+          </div>
         </div>
       </div>
 
